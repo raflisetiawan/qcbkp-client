@@ -198,7 +198,6 @@ const fillInput = async () => {
     try {
       loadingFill.value = true;
       const response = await useApiWithAuthorization.get(`track-records/${$state.editedIssue}`);
-      console.log(response);
 
       trackRecordForm.closed = Boolean(response.data.issue.closed);
       if (response.data.issue.todos !== null) {
@@ -222,7 +221,6 @@ const fillInput = async () => {
       }
     } catch (error) {
       if (error instanceof AxiosError && error.response && error.response.data) {
-        console.log(error);
 
         useErrorNotify(error.message);
       } else {

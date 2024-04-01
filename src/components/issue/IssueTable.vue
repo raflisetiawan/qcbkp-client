@@ -58,10 +58,6 @@
               <q-btn @click="memoState.showAddMemoDialog = true; memoState.issue_id = issue.id" color="purple"
                 v-if="isManager() || isAdmin()" flat icon-right="note_alt" dense size="sm">Tambahkan Memo</q-btn>
 
-              <q-btn icon="table_view" dense flat color="brown"
-                @click="handleManageTrackRecordOnClick(issue)"><q-tooltip>Manage Track
-                  Record</q-tooltip>
-              </q-btn>
               <q-btn icon="donut_large" dense flat color="blue"
                 :to="{ name: 'AdminManageIssueChartPage', params: { id: issue.id } }"> <q-tooltip>Chart</q-tooltip>
               </q-btn>
@@ -109,7 +105,6 @@ import { useIndonesianLocale } from 'src/composables/date';
 import { AxiosError } from 'axios';
 import { useErrorNotify } from 'src/composables/notifications';
 import EditDialog from '../track-record/EditDialog.vue';
-import { useTrackRecordStore } from 'src/stores/track-record';
 
 const { loadingBar, dialog } = useQuasar();
 const showFilterIssueByDate = ref(false);
@@ -117,7 +112,6 @@ const { initIssues, $state, deleteIssue } = useIssueStore();
 const showEditIssueDialog = ref(false);
 const { $state: memoState } = useMemoStore()
 const { getAllPlant } = usePlantStore()
-const { $state: trackRecordState } = useTrackRecordStore();
 
 const editedData: EditedIssue = reactive({
   id: 0,
@@ -232,10 +226,6 @@ const getSelectedIssueByPlantId = async (value: QSelectOption) => {
 
 }
 
-const handleManageTrackRecordOnClick = (issue: Issue) => {
-  trackRecordState.editedIssue = issue.id;
-  trackRecordState.showEditTrackTecordDialog = true;
-}
 
 onMounted(async () => {
   try {

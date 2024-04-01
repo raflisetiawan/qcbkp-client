@@ -16,7 +16,7 @@
         </q-card-section>
         <!-- Tambahkan tombol download -->
         <q-card-actions align="around" class="text-primary">
-          <q-btn :disable="gettingFile" icon="save" flat label="Download" :href="fileDownloadUrl" target="_blank" />
+          <q-btn :disable="gettingFile" icon="save" flat label="Download" @click="downloadFile" />
           <q-btn :disable="gettingFile" icon="preview" flat label="Lihat File" :href="fileUrl" target="_blank" />
         </q-card-actions>
       </q-card>
@@ -32,10 +32,10 @@ import { ref } from 'vue';
 
 const { $state } = useTrackRecordStore();
 const fileUrl = ref('');
+const excelFileUrl = ref('');
 const props = defineProps(['fileName']);
 const { notify } = useQuasar()
 
-const fileDownloadUrl = ref('')
 const gettingFile = ref(false);
 
 // Metode untuk mengunduh file Excel dari URL
@@ -47,22 +47,31 @@ const downloadExcelFile = async () => {
         id: $state.editedIssue
       }
     });
+
     // Periksa apakah respons berhasil
     if (response.data.success) {
-
-      fileDownloadUrl.value = response.data.fileurl
-
       // Konversi base64 ke blob
       const pdfData = atob(response.data.pdf_base64);
+      const excelData = atob(response.data.excel_base64)
       const arrayBuffer = new ArrayBuffer(pdfData.length);
+      const excelArrayBuffer = new ArrayBuffer(excelData.length);
       const uint8Array = new Uint8Array(arrayBuffer);
+      const excelUint8Array = new Uint8Array(excelArrayBuffer);
       for (let i = 0; i < pdfData.length; i++) {
         uint8Array[i] = pdfData.charCodeAt(i);
       }
+
+      for (let i = 0; i < excelData.length; i++) {
+        excelUint8Array[i] = excelData.charCodeAt(i);
+      }
+
       const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const excelBlob = new Blob([excelArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
 
       // Buat URL objek dari blob respons
       fileUrl.value = window.URL.createObjectURL(blob);
+      excelFileUrl.value = window.URL.createObjectURL(excelBlob);
 
     } else {
       throw new Error(response.data.message);
@@ -77,6 +86,15 @@ const downloadExcelFile = async () => {
   } finally {
     gettingFile.value = false;
   }
+};
+
+const downloadFile = () => {
+  const link = document.createElement('a');
+  link.href = excelFileUrl.value;
+  link.download = props.fileName; // Ganti nama_file.xlsx dengan nama file yang sesuai
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 </script>
