@@ -70,6 +70,7 @@ const { $state, addQualityIssue } = useQualityIssueStore()
 const { params } = useRoute()
 const { dialog } = useQuasar();
 const { getUserId } = useUserStore()
+const { notify } = useQuasar();
 
 const stringOptions = ref([]);
 const options = ref(stringOptions.value)
@@ -119,9 +120,9 @@ const onSubmit = async (): Promise<void> => {
   }
 }
 
-let timeoutId: any;
+let timeoutId: string | number | NodeJS.Timeout | undefined;
 
-const filterFn = async (val: any, update: any, abort: any) => {
+const filterFn = async (val: string, update: any) => {
   // Bersihkan timeout sebelumnya
   clearTimeout(timeoutId);
 
@@ -129,16 +130,24 @@ const filterFn = async (val: any, update: any, abort: any) => {
   timeoutId = setTimeout(async () => {
     if (val.length >= 5) {
       // Memperbarui hasil setelah penundaan
-      const response = await useApiWithAuthorization.get('quality-issue/get-sugestion/suggestions', {
-        params: {
-          query: val
-        }
-      });
-      stringOptions.value = response.data.suggestions;
+      try {
+        const response = await useApiWithAuthorization.get('quality-issue/get-sugestion/suggestions', {
+          params: {
+            query: val
+          }
+        });
+        stringOptions.value = response.data.suggestions;
+      } catch (error) {
+        notify({
+          message: 'Terjadi kesalahan',
+          color: 'negative',
+          icon: 'error'
+        })
+      }
 
       update(() => {
         const needle = val.toLocaleLowerCase();
-        options.value = stringOptions.value.filter((v: any) => v.toLocaleLowerCase().indexOf(needle) > -1);
+        options.value = stringOptions.value.filter((v: string) => v.toLocaleLowerCase().indexOf(needle) > -1);
       })
 
     }
@@ -146,7 +155,7 @@ const filterFn = async (val: any, update: any, abort: any) => {
 };
 
 
-const setModel = (val: any) => {
+const setModel = (val: string) => {
   addQualityIssueForm.problem = val
 }
 </script>
