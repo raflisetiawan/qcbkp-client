@@ -15,9 +15,20 @@
         </q-card-section>
         <q-form @submit="onSubmit">
           <q-card-section class="q-pt-none">
-            <q-input outlined type="text" autogrow v-model="addQualityIssueForm.problem" lazy-rules label="Masalah *"
+            <q-select class="q-mb-md" outlined label="Masalah" :model-value="addQualityIssueForm.problem" use-input
+              hide-selected fill-input input-debounce="0" :options="options" @filter="filterFn" @input-value="setModel">
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+            <!-- <q-input outlined type="text" autogrow v-model="addQualityIssueForm.problem" lazy-rules label="Masalah *"
               :error="v$.problem.$error" :error-message="v$.problem.$errors.map((e) => e.$message).join()"
-              @input="v$.problem.$touch" @blur="v$.problem.$touch" />
+              @input="v$.problem.$touch" @blur="v$.problem.$touch">
+            </q-input> -->
             <q-input outlined type="number" autogrow v-model="addQualityIssueForm.machine_performance" lazy-rules
               label="Performa Mesin *" :error="v$.machine_performance.$error"
               :error-message="v$.machine_performance.$errors.map((e) => e.$message).join()"
@@ -53,11 +64,16 @@ import { useRoute } from 'vue-router';
 import { useUserStore } from 'src/stores/user';
 import { useQuasar } from 'quasar';
 import { AxiosError } from 'axios';
+import { useApiWithAuthorization } from 'src/composables/api';
 
 const { $state, addQualityIssue } = useQualityIssueStore()
 const { params } = useRoute()
 const { dialog } = useQuasar();
 const { getUserId } = useUserStore()
+
+const stringOptions = ref([]);
+const options = ref(stringOptions.value)
+
 const addQualityIssueForm: QualityIssueForm = reactive({
   impact: '',
   machine_performance: '0',
@@ -101,6 +117,37 @@ const onSubmit = async (): Promise<void> => {
   } else {
     v$.value.$touch();
   }
+}
+
+let timeoutId: any;
+
+const filterFn = async (val: any, update: any, abort: any) => {
+  // Bersihkan timeout sebelumnya
+  clearTimeout(timeoutId);
+
+  // Atur timeout baru
+  timeoutId = setTimeout(async () => {
+    if (val.length >= 5) {
+      // Memperbarui hasil setelah penundaan
+      const response = await useApiWithAuthorization.get('quality-issue/get-sugestion/suggestions', {
+        params: {
+          query: val
+        }
+      });
+      stringOptions.value = response.data.suggestions;
+
+      update(() => {
+        const needle = val.toLocaleLowerCase();
+        options.value = stringOptions.value.filter((v: any) => v.toLocaleLowerCase().indexOf(needle) > -1);
+      })
+
+    }
+  }, 500);
+};
+
+
+const setModel = (val: any) => {
+  addQualityIssueForm.problem = val
 }
 </script>
 
