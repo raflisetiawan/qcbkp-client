@@ -25,10 +25,6 @@
                 </q-item>
               </template>
             </q-select>
-            <!-- <q-input outlined type="text" autogrow v-model="addQualityIssueForm.problem" lazy-rules label="Masalah *"
-              :error="v$.problem.$error" :error-message="v$.problem.$errors.map((e) => e.$message).join()"
-              @input="v$.problem.$touch" @blur="v$.problem.$touch">
-            </q-input> -->
             <q-input outlined type="number" autogrow v-model="addQualityIssueForm.machine_performance" lazy-rules
               label="Performa Mesin *" :error="v$.machine_performance.$error"
               :error-message="v$.machine_performance.$errors.map((e) => e.$message).join()"
@@ -37,12 +33,28 @@
               label="Durasi Mesin bermasalah *" :error="v$.trouble_duration_minutes.$error"
               :error-message="v$.trouble_duration_minutes.$errors.map((e) => e.$message).join()"
               @input="v$.trouble_duration_minutes.$touch" @blur="v$.trouble_duration_minutes.$touch" />
-            <q-input outlined autogrow v-model="addQualityIssueForm.solution" lazy-rules label="Solusi *"
-              :error="v$.solution.$error" :error-message="v$.solution.$errors.map((e) => e.$message).join()"
-              @input="v$.solution.$touch" @blur="v$.solution.$touch" />
-            <q-input outlined autogrow v-model="addQualityIssueForm.impact" lazy-rules label="Dampak *"
-              :error="v$.impact.$error" :error-message="v$.impact.$errors.map((e) => e.$message).join()"
-              @input="v$.impact.$touch" @blur="v$.impact.$touch" />
+            <q-select class="q-mb-md" outlined label="Solusi" :model-value="addQualityIssueForm.solution" use-input
+              hide-selected fill-input input-debounce="0" :options="solutionOptions" @filter="filterFnSolution"
+              @input-value="setSolutionModel">
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+            <q-select class="q-mb-md" outlined label="Dampak *" :model-value="addQualityIssueForm.impact" use-input
+              hide-selected fill-input input-debounce="0" :options="impactOptions" @filter="filterFnImpact"
+              @input-value="setImpactModel">
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
             <q-checkbox v-model="addQualityIssueForm.closed" label="Tutup Issue?"></q-checkbox>
           </q-card-section>
           <q-card-actions>
@@ -73,7 +85,11 @@ const { getUserId } = useUserStore()
 const { notify } = useQuasar();
 
 const stringOptions = ref([]);
+const solutionStringOptions = ref([]);
+const impactStringOptions = ref([]);
 const options = ref(stringOptions.value)
+const solutionOptions = ref(solutionStringOptions.value)
+const impactOptions = ref(impactStringOptions.value)
 
 const addQualityIssueForm: QualityIssueForm = reactive({
   impact: '',
@@ -153,10 +169,79 @@ const filterFn = async (val: string, update: any) => {
     }
   }, 500);
 };
+const filterFnSolution = async (val: string, update: any) => {
+  // Bersihkan timeout sebelumnya
+  clearTimeout(timeoutId);
+
+  // Atur timeout baru
+  timeoutId = setTimeout(async () => {
+    if (val.length >= 5) {
+      // Memperbarui hasil setelah penundaan
+      try {
+        const response = await useApiWithAuthorization.get('quality-issue/get-sugestion-solution/suggestions', {
+          params: {
+            query: val
+          }
+        });
+        solutionStringOptions.value = response.data.suggestions;
+      } catch (error) {
+        notify({
+          message: 'Terjadi kesalahan',
+          color: 'negative',
+          icon: 'error'
+        })
+      }
+
+      update(() => {
+        const needle = val.toLocaleLowerCase();
+        solutionOptions.value = solutionStringOptions.value.filter((v: string) => v.toLocaleLowerCase().indexOf(needle) > -1);
+      })
+
+    }
+  }, 500);
+};
+const filterFnImpact = async (val: string, update: any) => {
+  // Bersihkan timeout sebelumnya
+  clearTimeout(timeoutId);
+
+  // Atur timeout baru
+  timeoutId = setTimeout(async () => {
+    if (val.length >= 5) {
+      // Memperbarui hasil setelah penundaan
+      try {
+        const response = await useApiWithAuthorization.get('quality-issue/get-sugestion-impact/suggestions', {
+          params: {
+            query: val
+          }
+        });
+        impactStringOptions.value = response.data.suggestions;
+      } catch (error) {
+        notify({
+          message: 'Terjadi kesalahan',
+          color: 'negative',
+          icon: 'error'
+        })
+      }
+
+      update(() => {
+        const needle = val.toLocaleLowerCase();
+        impactOptions.value = impactStringOptions.value.filter((v: string) => v.toLocaleLowerCase().indexOf(needle) > -1);
+      })
+
+    }
+  }, 500);
+};
 
 
 const setModel = (val: string) => {
   addQualityIssueForm.problem = val
+}
+
+const setSolutionModel = (val: string) => {
+  addQualityIssueForm.solution = val
+}
+const setImpactModel = (val: string) => {
+  addQualityIssueForm.impact = val
 }
 </script>
 
