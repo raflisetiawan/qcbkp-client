@@ -17,7 +17,7 @@
         <!-- Tambahkan tombol download -->
         <q-card-actions align="around" class="text-primary">
           <q-btn :disable="gettingFile" icon="save" flat label="Download" @click="downloadFile" />
-          <q-btn :disable="gettingFile" icon="preview" flat label="Lihat File" :href="fileUrl" target="_blank" />
+          <q-btn :disable="disablePreviewFile" icon="preview" flat label="Lihat File" :href="fileUrl" target="_blank" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -35,19 +35,21 @@ const fileUrl = ref('');
 const excelFileUrl = ref('');
 const props = defineProps(['fileName']);
 const { notify } = useQuasar()
+const disablePreviewFile = ref(false);
 
 const gettingFile = ref(false);
 
 // Metode untuk mengunduh file Excel dari URL
 const downloadExcelFile = async () => {
   try {
+    disablePreviewFile.value = true;
     gettingFile.value = true;
     const response = await api.get('file/getexcel', {
       params: {
         id: $state.editedIssue
       }
     });
-
+    disablePreviewFile.value = false;
     // Periksa apakah respons berhasil
     if (response.data.success) {
       // Konversi base64 ke blob
@@ -76,6 +78,49 @@ const downloadExcelFile = async () => {
     } else {
       throw new Error(response.data.message);
     }
+    disablePreviewFile.value = true;
+  } catch (error) {
+    await getExcelFile();
+    notify({
+      message: 'File terlalu besar, Tidak dapat melihat file. anda bisa mendownload filenya saja',
+      color: 'negative',
+      multiLine: true,
+      icon: 'error'
+    })
+  } finally {
+    gettingFile.value = false;
+  }
+};
+
+const getExcelFile = async () => {
+  try {
+    gettingFile.value = true;
+    const response = await api.get('file/getexcelfile', {
+      params: {
+        id: $state.editedIssue
+      }
+    });
+
+    // Periksa apakah respons berhasil
+    if (response.data.success) {
+      // Konversi base64 ke blob
+      const excelData = atob(response.data.excel_base64)
+      const excelArrayBuffer = new ArrayBuffer(excelData.length);
+      const excelUint8Array = new Uint8Array(excelArrayBuffer);
+
+      for (let i = 0; i < excelData.length; i++) {
+        excelUint8Array[i] = excelData.charCodeAt(i);
+      }
+
+      const excelBlob = new Blob([excelArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+
+      // Buat URL objek dari blob respons
+      excelFileUrl.value = window.URL.createObjectURL(excelBlob);
+
+    } else {
+      throw new Error(response.data.message);
+    }
 
   } catch (error) {
     notify({
@@ -86,7 +131,7 @@ const downloadExcelFile = async () => {
   } finally {
     gettingFile.value = false;
   }
-};
+}
 
 const downloadFile = () => {
   const link = document.createElement('a');
