@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
         path: '/track-records',
         component: () => import('pages/user/track-record/IndexPage.vue'),
         meta: {
-          requiresAuth: true,
+          requiresAdmin: true,
         },
         name: 'TrackRecordIndexPage',
       },
@@ -182,6 +182,11 @@ const routes: RouteRecordRaw[] = [
 
   // Always leave this as last one,
   // but you can also remove it
+  {
+    path: '/notadmin',
+    component: () => import('pages/NotAdminPage.vue'),
+    name: 'NotAdminPage',
+  },
   {
     path: '/unauthorized',
     component: () => import('pages/UnauthorizedPage.vue'),

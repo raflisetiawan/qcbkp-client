@@ -7,8 +7,8 @@
         <tr>
           <th class="text-left">Problem</th>
           <th class="text-left">Machine Performance</th>
-          <th class="text-left">Closed Issue?</th>
-          <th class="text-left">Aksi</th>
+          <th class="text-left" v-if="isAdmin()">Closed Issue?</th>
+          <th class="text-left" v-if="isAdmin()">Aksi</th>
         </tr>
       </thead>
       <tbody>
@@ -16,9 +16,9 @@
           <tr>
             <td class="text-left">{{ qualityIssue.problem }}</td>
             <td class="text-left">{{ qualityIssue.machine_performance }}</td>
-            <td><q-checkbox v-model="qualityIssue.closed"
+            <td v-if="isAdmin()"><q-checkbox v-model="qualityIssue.closed"
                 @update:model-value="handleToggleClosedIssue(qualityIssue.id)"></q-checkbox></td>
-            <td class="text-left">
+            <td v-if="isAdmin()" class="text-left">
               <q-btn icon="table_view" dense flat color="brown"
                 @click="handleManageTrackRecordOnClick(qualityIssue)"><q-tooltip>Manage Track
                   Record</q-tooltip>
@@ -52,6 +52,7 @@ import { useErrorNotify } from 'src/composables/notifications';
 import { useTrackRecordStore } from 'src/stores/track-record';
 import EditDialog from '../track-record/EditDialog.vue';
 import { useApiWithAuthorization } from 'src/composables/api';
+import { isAdmin } from 'src/composables/auth';
 
 const { loadingBar, dialog } = useQuasar();
 const { $state: trackRecordState } = useTrackRecordStore()

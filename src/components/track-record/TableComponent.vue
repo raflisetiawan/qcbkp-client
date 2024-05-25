@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-markup-table>
+    <q-markup-table wrap-cells>
       <thead>
         <tr>
           <th class="text-left">Main Issue</th>

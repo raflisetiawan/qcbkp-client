@@ -65,7 +65,7 @@ export default boot(async ({ router }) => {
         next();
       } else {
         // Redirect to UnauthorizedPage if the user is not an admin
-        next({ name: 'UnauthorizedPage' });
+        next({ name: 'NotAdminPage' });
       }
     }
     // Check if the route requires authentication
