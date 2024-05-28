@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
         path: '/issue',
         component: () => import('pages/user/issue/IndexPage.vue'),
         meta: {
-          requiresAuth: true,
+          requiresAdmin: true,
         },
         name: 'ManageIssue',
       },
@@ -49,7 +49,7 @@ const routes: RouteRecordRaw[] = [
         path: '/issue/:id/quality-issue',
         component: () => import('pages/user/quality-issue/IndexPage.vue'),
         meta: {
-          requiresAuth: true,
+          requiresAdmin: true,
         },
         name: 'ManageQualityIssue',
       },

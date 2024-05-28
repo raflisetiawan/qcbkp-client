@@ -49,7 +49,6 @@ const downloadExcelFile = async () => {
         id: $state.editedIssue
       }
     });
-    disablePreviewFile.value = false;
     // Periksa apakah respons berhasil
     if (response.data.success) {
       // Konversi base64 ke blob
@@ -74,11 +73,10 @@ const downloadExcelFile = async () => {
       // Buat URL objek dari blob respons
       fileUrl.value = window.URL.createObjectURL(blob);
       excelFileUrl.value = window.URL.createObjectURL(excelBlob);
-
+      disablePreviewFile.value = false;
     } else {
       throw new Error(response.data.message);
     }
-    disablePreviewFile.value = true;
   } catch (error) {
     await getExcelFile();
     notify({
